@@ -3,32 +3,54 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-solution-strategy]]
 == Solution Strategy
 
+The following table summarizes the key strategic decisions and how they address our requirements and quality goals.
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-.Contents
-A short summary and explanation of the fundamental decisions and solution strategies, that shape system architecture. It includes
+[options="header",cols="1,2,2,2"]
+|===
+|Decision |Description |Goal/Requirement |Rationale
 
-* technology decisions
-* decisions about the top-level decomposition of the system, e.g. usage of an architectural pattern or design pattern
-* decisions on how to achieve key quality goals
-* relevant organizational decisions, e.g. selecting a development process or delegating certain tasks to third parties.
+|Microservice Architecture
+|The system is decomposed into four core services: Image Service, User Service, Community Service, and Editing Service.
+|<<REQ_2>>, <<REQ_5>>, <<REQ_7>>, Performance Efficiency
+|Independent scaling of services (e.g. Image Service handles heavy upload traffic independently). Supports <<QS_P_1>>.
 
-.Motivation
-These decisions form the cornerstones for your architecture. They are the foundation for many other detailed decisions or implementation rules.
+|React Native for Mobile
+|Cross-platform mobile framework for iOS and Android.
+|<<REQ_1>> through <<REQ_5>>, Usability
+|Single codebase for both platforms reduces development effort for a small start-up team. Supports <<QS_U_1>>.
 
-.Form
-Keep the explanations of such key decisions short.
+|Node.js Backend
+|Server-side runtime for all microservices.
+|Performance Efficiency
+|Non-blocking I/O model well-suited for image upload/download workloads. Large ecosystem of libraries. Supports <<QS_P_1>>.
 
-Motivate what was decided and why it was decided that way,
-based upon problem statement, quality goals and key constraints.
-Refer to details in the following sections.
+|PostgreSQL Database
+|Relational database for user data, metadata, and community content.
+|<<REQ_1>>, <<REQ_5>>, Security & Privacy
+|ACID compliance for transactional data. Mature tooling for GDPR compliance (data deletion, export). Supports <<QS_S_1>>.
 
+|Cloud Object Storage
+|AWS S3 or GCP Cloud Storage for image binary data.
+|<<REQ_2>>, Performance Efficiency
+|Cost-effective, highly available storage for large binary data. CDN integration for fast delivery. Supports <<QS_P_1>>.
 
-.Further Information
+|REST API Communication
+|All services expose RESTful APIs.
+|<<REQ_7>>, Usability
+|Simple, well-understood protocol. Easy integration with Pixlr and third-party services.
 
-See https://docs.arc42.org/section-4/[Solution Strategy] in the arc42 documentation.
+|Pixlr Integration via Adapter Pattern
+|Loose coupling to Pixlr REST API through an adapter layer in the Editing Service.
+|<<REQ_3>>, <<REQ_4>>, <<REQ_7>>
+|Adapter pattern isolates the system from Pixlr API changes. Enables future replacement of Pixlr with alternative providers.
 
-****
-endif::arc42help[]
+|OAuth 2.0 + Social Login
+|Authentication via OAuth 2.0 with support for Google/Facebook social login.
+|<<REQ_8>>, Security & Privacy, Usability
+|Industry-standard security. Social login reduces registration friction. Supports <<QS_S_1>> and <<QS_U_1>>.
+
+|Cloud Deployment with Docker
+|Containerized services deployed on AWS/GCP.
+|Performance Efficiency
+|Elastic scaling, high availability, and consistent deployment across environments. Supports <<QS_P_1>>.
+|===

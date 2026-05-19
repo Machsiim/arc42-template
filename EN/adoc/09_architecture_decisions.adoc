@@ -3,35 +3,56 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-design-decisions]]
 == Architecture Decisions
 
+=== ADR-1: Microservice Architecture
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-.Contents
-Important, expensive, large scale or risky architecture decisions including rationales.
-With "decisions" we mean selecting one alternative based on given criteria.
+* **Status:** Accepted
+* **Context:** The Image Sharing App has distinct functional domains (user management, image handling, community features, editing) with different scaling requirements. The start-up needs to iterate quickly on individual features.
+* **Decision:** Decompose the system into four microservices: User Service, Image Service, Community Service, and Editing Service.
+* **Consequences:**
+** [+] Independent deployment and scaling of each service
+** [+] Technology flexibility per service
+** [-] Increased operational complexity (service discovery, inter-service communication)
+** [-] Distributed data management requires careful consistency handling
 
-Please use your judgement to decide whether an architectural decision should be documented
-here in this central section or whether you better document it locally
-(e.g. within the white box template of one building block).
+=== ADR-2: React Native for Cross-Platform Mobile Development
 
-Avoid redundancy. 
-Refer to section 4, where you already captured the most important decisions of your architecture.
+* **Status:** Accepted
+* **Context:** The app must be available on both iOS and Android. The team is small (3 developers) and cannot maintain two native codebases.
+* **Decision:** Use React Native as the mobile framework.
+* **Consequences:**
+** [+] Single codebase for both platforms, reducing development time by ~40%
+** [+] Large community and ecosystem
+** [-] Slight performance trade-off compared to fully native apps for image-heavy operations
+** [-] Dependency on React Native release cycle for platform-specific features
 
-.Motivation
-Stakeholders of your system should be able to comprehend and retrace your decisions.
+=== ADR-3: Pixlr Integration via Adapter Pattern
 
-.Form
-Various options:
+* **Status:** Accepted
+* **Context:** The app requires cloud-based photo editing capabilities (<<REQ_7>>). Pixlr offers a comprehensive REST API for this. However, tight coupling to a third-party API creates vendor lock-in risk.
+* **Decision:** Integrate Pixlr through an Adapter Pattern in the Editing Service, defining an internal editing interface that Pixlr implements.
+* **Consequences:**
+** [+] Loose coupling: Pixlr can be replaced with an alternative provider by implementing a new adapter
+** [+] Internal API remains stable regardless of Pixlr API changes
+** [-] Additional abstraction layer adds development effort
+** [-] Not all Pixlr-specific features may be easily abstracted
 
-* ADR (https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions[Documenting Architecture Decisions]) for every important decision
-* List or table, ordered by importance and consequences or:
-* more detailed in form of separate sections per decision
+=== ADR-4: OAuth 2.0 with Social Login
 
-.Further Information
+* **Status:** Accepted
+* **Context:** The target audience (18–35, millennials/Gen Z) expects frictionless registration. Security must comply with industry standards and GDPR.
+* **Decision:** Use OAuth 2.0 for authentication with Google and Facebook social login options, plus traditional email/password.
+* **Consequences:**
+** [+] Reduced registration friction increases conversion rates
+** [+] Delegated authentication reduces security responsibility for credential storage
+** [-] Dependency on third-party identity providers (Google, Facebook)
 
-See https://docs.arc42.org/section-9/[Architecture Decisions] in the arc42 documentation.
-There you will find links and examples about ADR.
+=== ADR-5: Cloud Object Storage for Images
 
-****
-endif::arc42help[]
+* **Status:** Accepted
+* **Context:** The app handles large volumes of image data that need to be stored cost-effectively and delivered globally with low latency.
+* **Decision:** Store all image binaries in cloud object storage (AWS S3 / GCP Cloud Storage) with CDN distribution.
+* **Consequences:**
+** [+] Virtually unlimited, cost-effective storage
+** [+] Built-in redundancy and high availability
+** [+] CDN integration for fast global delivery
+** [-] Egress costs can become significant at scale
